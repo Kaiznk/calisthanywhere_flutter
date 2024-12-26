@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "1022587018643",
+    "project_id": "calisthanywhere",
+    "storage_bucket": "calisthanywhere.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1022587018643:android:3233f665d6c2b0e507dc66",
+        "android_client_info": {
+          "package_name": "com.application.kaiznkinc.calistenico"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1022587018643-0kpitpqhhovrpkp7gsuiinbs4c2lij7k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.application.kaiznkinc.calistenico",
+            "certificate_hash": "d310befbaefb18e93b9a1a5955b8e8902874cf12"
+          }
+        },
+        {
+          "client_id": "1022587018643-8gdpi0k27p6tbq6b06joug0de11dlvmo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8Ky-6fwm-ycP55-p2nWZlNeND5Nlxm0o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1022587018643-8gdpi0k27p6tbq6b06joug0de11dlvmo.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1022587018643-ft4ro4h99nrvj8osjm56ftknh0d2pmfq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.application.kaiznkinc.calistenico"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

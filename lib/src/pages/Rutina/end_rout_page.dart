@@ -1,82 +1,127 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:lottie/lottie.dart'; // Para la animación de confeti
+import 'package:animated_text_kit/animated_text_kit.dart'; // Para animar el texto
 
-// ignore: must_be_immutable
-class EndRoutPage extends StatelessWidget {
+class EndRoutPage extends StatefulWidget {
+  @override
+  _EndRoutPageState createState() => _EndRoutPageState();
+}
+
+class _EndRoutPageState extends State<EndRoutPage> {
   late AudioPlayer _player;
 
   @override
-  Widget build(BuildContext context) {
-    _startPlayer();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('CalisthAnyWhere'),
-      ),
-      body: Center(
-        child: Column(
-          children: <Widget>[
-            Container(
-                margin: EdgeInsets.only(top: 56.0),
-                child: Text(
-                  'Well done!',
-                  style: TextStyle(
-                      fontSize: 42.0,
-                      color: Color(0xFFFFB41F),
-                      fontFamily: 'sans-serif-medium'),
-                )),
-            SizedBox(
-              height: 5.0,
-            ),
-            Image(
-              image: AssetImage('assets/images/well_done.png'),
-              width: 238.0,
-              height: 138.0,
-            ),
-            Image(
-              image: AssetImage('assets/images/well_donestr.png'),
-              width: 233.0,
-              height: 112.0,
-            ),
-            Container(
-                width: 440.0,
-                margin: EdgeInsets.symmetric(horizontal: 7.0),
-                padding: EdgeInsets.only(top: 80.0),
-                // ignore: deprecated_member_use
-                child: RaisedButton(
-                  color: const Color(0xFF0E0E0E),
-                  textColor: const Color(0xFFE0E0E6),
-                  onPressed: () {
-                    _stopPlayer();
-                    Navigator.pop(context);
-                  },
-                  child: Text(
-                    'Finish',
-                    style: TextStyle(fontSize: 19.0),
-                  ),
-                )),
-          ],
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    _startPlayer(); // Inicia el audio cuando la página se abre
   }
 
-  // void _startPlayer() async {
-  //   _player = await _cache.play('mcrowave_ready.mp3');
-  // }
-
-  void _startPlayer() async {
-    _player = AudioPlayer();
-    await _player.setAsset('assets/audio/mcrowave_ready.mp3');
-    _player.play();
-  }
-
+  @override
   void dispose() {
-    _player.stop();
-    _stopPlayer();
+    _stopPlayer(); // Detiene el audio cuando la página se cierra
+    super.dispose();
+  }
+
+  FutureOr<void> _startPlayer() async {
+    _player = AudioPlayer();
+    await _player.setAsset('assets/audio/clapping.mp3');
+    _player.play();
   }
 
   void _stopPlayer() {
     _player.stop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'CalisthAnyWhere',
+          style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.black87,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            SizedBox(height: 20.0),
+            // Texto animado
+            AnimatedTextKit(
+              animatedTexts: [
+                ColorizeAnimatedText(
+                  'Well done!',
+                  textStyle: TextStyle(
+                    fontSize: 48.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  colors: [
+                    Color(0xFFFFB41F),
+                    Colors.pink,
+                    Colors.blue,
+                    Colors.green,
+                  ],
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              repeatForever: true,
+            ),
+            SizedBox(height: 30.0),
+            // Animación de confeti
+            Flexible(
+              child: Lottie.asset(
+                'assets/animations/confetti.json', // Asegúrate de tener este archivo
+                width: double.infinity,
+                height: 200.0,
+                fit: BoxFit.contain,
+              ),
+            ),
+            SizedBox(height: 20.0),
+            // Imagen extra
+            Flexible(
+              child: Image.asset(
+                'assets/images/well_donestr.png',
+                width: double.infinity,
+                height: 120.0,
+                fit: BoxFit.contain,
+              ),
+            ),
+            Spacer(),
+            // Botón de finalizar
+            SizedBox(
+              width: double.infinity,
+              height: 60.0,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.black87,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Finish',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 40.0),
+          ],
+        ),
+      ),
+    );
   }
 }

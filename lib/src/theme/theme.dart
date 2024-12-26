@@ -1,33 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class ThemeProvider extends ChangeNotifier{
-  ThemeData? _selectedTheme;
+final lightTheme = ThemeData(
+  brightness: Brightness.light,
+  primaryColor: Colors.lightBlueAccent,
+  scaffoldBackgroundColor: Colors.grey[100],
+  cardColor: Colors.white,
+  appBarTheme: AppBarTheme(
+    backgroundColor: Colors.lightBlueAccent,
+    titleTextStyle: TextStyle(
+      color: Colors.white,
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  iconTheme: IconThemeData(color: Colors.lightBlue[800]),
+  textTheme: TextTheme(
+    bodyMedium: TextStyle(color: Colors.blue[900]),
+  ),
+);
 
-  ThemeData light = ThemeData.light();
-  ThemeData dark = ThemeData.dark();
+final darkTheme = ThemeData(
+  brightness: Brightness.dark,
+  primaryColor: Colors.blueAccent,
+  scaffoldBackgroundColor: Colors.grey[900],
+  cardColor: Colors.grey[800],
+  appBarTheme: AppBarTheme(
+    backgroundColor: Colors.blueAccent,
+    titleTextStyle: TextStyle(
+      color: Colors.white,
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  iconTheme: IconThemeData(color: Colors.blue[300]),
+  textTheme: TextTheme(
+    bodyMedium: TextStyle(color: Colors.blue[100]),
+  ),
+);
 
-  ThemeProvider({bool? isDarkMode}){
-    if (isDarkMode!=null && isDarkMode) {
-      _selectedTheme = dark;
-    } else {
-      _selectedTheme = light;
-    }
+class ThemeProvider with ChangeNotifier {
+  late ThemeData _currentTheme;
+
+  ThemeProvider({required bool isDarkMode}) {
+    _currentTheme = isDarkMode ? darkTheme : lightTheme;
   }
 
+  ThemeData get getTheme => _currentTheme;
 
-  Future<void> swapTheme() async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (_selectedTheme == dark) {
-      _selectedTheme = light;
-      prefs.setBool("isDarkTheme", false);
-    } else {
-      _selectedTheme = dark;
-      prefs.setBool("isDarkTheme", true);
-    }
+  void swapTheme() {
+    _currentTheme = _currentTheme == lightTheme ? darkTheme : lightTheme;
     notifyListeners();
-  } 
-
-  ThemeData? get getTheme => _selectedTheme;
-
+  }
 }

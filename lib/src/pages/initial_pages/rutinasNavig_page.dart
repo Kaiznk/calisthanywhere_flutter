@@ -1,9 +1,7 @@
-import 'package:calistenico/src/databases/routinesDB.dart';
 import 'package:calistenico/src/models/exercise_model.dart';
 import 'package:calistenico/src/models/routine_model.dart';
-import 'package:calistenico/src/pages/Rutina/newRoutine/db/sql_helpExer.dart';
-import 'package:calistenico/src/pages/Rutina/newRoutine/db/sql_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:calistenico/src/databases/routinesDB.dart'; // Asegúrate de importar el archivo correcto
 
 // ignore: must_be_immutable
 class RutinasNavigPage extends StatefulWidget {
@@ -12,15 +10,14 @@ class RutinasNavigPage extends StatefulWidget {
 }
 
 class _RutinasNavigPageState extends State<RutinasNavigPage> {
-  final RoutinesDB routinesDB = new RoutinesDB();
-
   List<Routine> listaRout = [];
   bool _isLoading = true;
+  RoutinesDB routinesDB = new RoutinesDB();
 
   @override
   void initState() {
     super.initState();
-    _crearLista(); // Loading the diary when the app starts
+    _crearLista(); // Cargar las rutinas desde la base de datos local cuando inicie la página
   }
 
   @override
@@ -44,6 +41,8 @@ class _RutinasNavigPageState extends State<RutinasNavigPage> {
   }
 
   Widget _cargarCards(BuildContext context, Routine routine) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     final card = Container(
       child: Column(
         children: <Widget>[
@@ -53,12 +52,18 @@ class _RutinasNavigPageState extends State<RutinasNavigPage> {
           Text(
             routine.tipoR,
             textAlign: TextAlign.center,
+            style: TextStyle(
+              color:
+                  isDarkMode ? Colors.white : Colors.black, // Cambia el color
+              fontWeight: FontWeight.bold,
+            ),
           ),
           Container(
             margin: EdgeInsets.symmetric(vertical: 3.0),
             child: FadeInImage(
                 placeholder: AssetImage('assets/images/jar_loading.gif'),
                 height: 119.0,
+                width: double.infinity,
                 fit: BoxFit.cover,
                 image: AssetImage('assets/images/' + routine.foto + '.png')),
           ),
@@ -68,12 +73,18 @@ class _RutinasNavigPageState extends State<RutinasNavigPage> {
               child: Text(
                 routine.nombRout,
                 textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isDarkMode
+                      ? Colors.white
+                      : Colors.black, // Color dinámico
+                ),
               ),
             ),
           ),
         ],
       ),
     );
+
     return InkWell(
       onTap: () {
         if (routine.nombRout == 'New Routine') {
@@ -102,59 +113,36 @@ class _RutinasNavigPageState extends State<RutinasNavigPage> {
     );
   }
 
-  void _crearLista() async {
-    final dataRout = await SQLHelper.getItems();
-    final dataEjer = await SQLHelpExer.getItems();
-    int k = 0;
-    int l = 0;
-    List<int> repet = [];
-    List<Exercise> ejerR = [];
+  void _crearLista() {
+    try {
+      // Obtener rutinas desde la base de datos local
+      List<Routine> loadedRoutines = routinesDB.getRutinas();
 
-    for (int i = 0; i < routinesDB.getRutinas().length; i++) {
-      listaRout.add(routinesDB.getRutinas()[i]);
+      // Agregar una rutina de ejemplo para nuevos usuarios
+      loadedRoutines.add(Routine(
+        -100, // ID ficticio
+        'New Routine',
+        1,
+        1,
+        1,
+        1,
+        [],
+        [],
+        'ic_add_black_24dp',
+        'User routine',
+      ));
+
+      // Actualizar el estado de la lista de rutinas
+      setState(() {
+        listaRout = loadedRoutines;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading routines: $e');
+      setState(() {
+        _isLoading = false;
+      });
     }
-
-    if (dataRout.isNotEmpty) {
-      while (k < dataRout.length) {
-        l = 0;
-        ejerR = [];
-        repet = [];
-        while (l < dataEjer.length) {
-          if (dataEjer[l]['idRoutine'] == dataRout[k]['id']) {
-            ejerR.add(new Exercise(
-                dataEjer[l]['nombre'],
-                dataEjer[l]['nivel'],
-                dataEjer[l]['muscle'],
-                dataEjer[l]['previos'],
-                dataEjer[l]['ayudaA'],
-                dataEjer[l]['descripcion'],
-                dataEjer[l]['consejo'],
-                dataEjer[l]['foto']));
-            repet.add(dataEjer[l]['repet']);
-          }
-          l++;
-        }
-        listaRout.add(new Routine(
-            dataRout[k]['id'],
-            dataRout[k]['nombRout'],
-            dataRout[k]['serieMax'],
-            dataRout[k]['serieMin'],
-            dataRout[k]['descanEjerc'],
-            dataRout[k]['descanSerie'],
-            ejerR,
-            repet,
-            'training',
-            dataRout[k]['tipoR']));
-        k++;
-      }
-    }
-
-    listaRout.add(new Routine(-199, 'New Routine', 1, 1, 1, 1, [], [],
-        'ic_add_black_24dp', 'User routine'));
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   Color colorCards(Routine routine) {

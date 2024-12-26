@@ -12,118 +12,206 @@ class RoutineInitialPage extends StatefulWidget {
 
 class _RoutineInitialPageState extends State<RoutineInitialPage> {
   late Routine _routine;
-  int numSerDef = 0;
-  late String _opcionSeleccionada = '1';
-  bool t = false;
+  late String _opcionSeleccionada;
+
+  @override
+  void initState() {
+    super.initState();
+    _opcionSeleccionada = ""; // Inicialización temprana
+  }
 
   @override
   Widget build(BuildContext context) {
-    _routine = ModalRoute.of(context)?.settings.arguments as Routine;
-    if (t == false) {
-      int o = _routine.serieMin;
-      _opcionSeleccionada = '$o';
-      t = true;
+    final args = ModalRoute.of(context)?.settings.arguments;
+
+    if (args == null || args is! Routine) {
+      return _errorScreen();
     }
 
+    _routine = args;
+    _opcionSeleccionada = _opcionSeleccionada.isEmpty
+        ? '${_routine.serieMin}'
+        : _opcionSeleccionada;
+
+    List<Exercise> exerciseList = _routine.ejercR.cast<Exercise>();
+
     return Scaffold(
-      appBar:
-          AppBar(title: Text('CalisthAnyWhere'), actions: isUserR(_routine)),
-      body: Column(
-        children: <Widget>[
-          SizedBox(
-            height: 10.0,
-          ),
-          Center(
-            child: Text(
-              _routine.nombRout,
-              style: TextStyle(fontSize: 20.0, fontStyle: FontStyle.italic),
+      appBar: AppBar(
+        title: Text('CalisthAnyWhere'),
+        actions: isUserR(_routine),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: <Widget>[
+            SizedBox(height: 20.0),
+            Center(
+              child: Text(
+                _routine.nombRout,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold, // Texto en negrita para resaltar
+                  fontSize: 34.0, // Tamaño grande y llamativo
+                  color: Colors.deepPurple, // Color fuerte y elegante
+                  fontStyle: FontStyle.normal, // Sin cursiva
+                  letterSpacing: 1.5, // Espaciado ligero entre letras
+                  shadows: [
+                    Shadow(
+                      offset: Offset(2.0, 2.0), // Sombra sutil
+                      blurRadius: 4.0,
+                      color: Colors.black38, // Sombra suave para destacar
+                    ),
+                  ],
+                  height: 1.2, // Altura entre líneas para un mejor aspecto
+                ),
+              ),
             ),
-          ),
-          Container(
-              width: 440.0,
-              margin: EdgeInsets.all(7.0),
-              // ignore: deprecated_member_use
-              child: RaisedButton(
-                color: const Color(0xFF0E0E0E),
-                textColor: const Color(0xFFE0E0E6),
+            SizedBox(height: 20.0),
+            Container(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Theme.of(context).secondaryHeaderColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 15.0),
+                ),
                 onPressed: () {
-                  //Navigator.pushNamed(context, 'ejerroutpage');
                   Navigator.pushReplacementNamed(context, 'ejerroutpage',
                       arguments: _enviarDatos());
                 },
                 child: Text(
                   'Start',
-                  style: TextStyle(fontSize: 19.0),
+                  style: TextStyle(
+                    fontSize: 20.0, // Tamaño más grande
+                    fontWeight: FontWeight.bold, // Negrita para destacar
+                    color: Colors.white, // Texto blanco para contraste
+                    shadows: [
+                      Shadow(
+                        offset: Offset(1.0, 1.0), // Sombra ligera
+                        blurRadius: 3.0,
+                        color: Colors.black45, // Sombra sutil
+                      ),
+                    ],
+                  ),
                 ),
-              )),
-          Container(
-            margin: EdgeInsets.only(left: 9.0),
-            child: Row(
-              children: <Widget>[
-                Text(
-                  'Number of rounds  ',
-                ),
-                _crearDropdown(_routine.serieMin, _routine.serieMax),
-              ],
+              ),
             ),
-          ),
-          SizedBox(
-            height: 10.0,
-          ),
-          Flexible(
-            child: ListView.builder(
-              itemCount: _routine.ejercR.length,
-              itemBuilder: (context, i) =>
-                  _cargarCards(context, _routine.ejercR[i], _routine.repet[i]),
+            SizedBox(height: 20.0),
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 9.0),
+              child: Row(
+                children: <Widget>[
+                  Text(
+                    'Number of rounds:',
+                  ),
+                  SizedBox(width: 10.0),
+                  _crearDropdown(_routine.serieMin, _routine.serieMax),
+                ],
+              ),
             ),
-          )
-        ],
+            SizedBox(height: 20.0),
+            Expanded(
+              child: ListView.builder(
+                itemCount: exerciseList.length,
+                itemBuilder: (context, i) {
+                  final exercise = exerciseList[i];
+                  return _cargarCards(context, exercise, _routine.repet[i]);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _errorScreen() {
+    return Scaffold(
+      appBar: AppBar(title: Text('Error')),
+      body: Center(
+        child: Text(
+          'No se pudo cargar la rutina.',
+        ),
       ),
     );
   }
 
   Widget _cargarCards(BuildContext context, Exercise ejercR, int a) {
     return Card(
-        margin: EdgeInsets.all(11.0),
-        child: ListTile(
-          leading: Image(
-            image: AssetImage('assets/images/' + ejercR.foto + '.png'),
-            height: 50.0,
-            width: 50.0,
-          ),
-          title: Text(
-            ejercR.nombre,
-            style: TextStyle(fontSize: 14.0),
-          ),
-          trailing: Text('Reps: ' + repets(a)),
-        ));
+      color: Theme.of(context).cardColor,
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
+      child: ListTile(
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(8.0),
+          child: _buildImage(ejercR.foto),
+        ),
+        title: Text(
+          ejercR.nombre,
+        ),
+        trailing: Text(
+          'Reps: ${repets(a)}',
+        ),
+      ),
+    );
   }
 
-  @override
-  void initState() {
-    super.initState();
+  Widget _buildImage(String foto) {
+    // Verificar si es una URL
+    final uri = Uri.tryParse(foto);
+    final isUrl = uri != null && uri.hasAbsolutePath;
+
+    if (isUrl) {
+      return Image.network(
+        foto,
+        height: 50.0,
+        width: 50.0,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.image_not_supported, size: 50.0),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          );
+        },
+      );
+    } else {
+      return Image.asset(
+        'assets/images/$foto.png',
+        height: 50.0,
+        width: 50.0,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.image_not_supported, size: 50.0),
+      );
+    }
   }
 
   String repets(int a) {
-    int k;
-    if (a == 9999) {
-      return "Max";
-    } else if (a < 0) {
-      k = a * (-1);
-      return '$k';
-    } else if (a > 10000) {
-      k = a - 10000;
-      return '$k';
-    } else {
-      return '$a';
-    }
+    if (a == 9999) return "Max";
+    if (a < 0) return '${-a}';
+    if (a > 10000) return '${a - 10000}';
+    return '$a';
   }
 
   Widget _crearDropdown(int min, int max) {
     List<DropdownMenuItem<String>> listser = [];
     for (int i = min; i <= max; i++) {
       listser.add(DropdownMenuItem(
-        child: Text('$i'),
+        child: Text(
+          '$i',
+        ),
         value: '$i',
       ));
     }
@@ -136,47 +224,44 @@ class _RoutineInitialPageState extends State<RoutineInitialPage> {
           _opcionSeleccionada = '$opt';
         });
       },
+      dropdownColor: Theme.of(context).canvasColor,
     );
   }
 
   DatosRout _enviarDatos() => DatosRout(_routine, _numSer(), 1, 0);
 
   int _numSer() {
-    int a = 0;
-    for (int i = 1; i <= 7; i++) {
-      if (_opcionSeleccionada == '$i') {
-        return i;
-      }
-    }
-    return a;
+    return int.tryParse(_opcionSeleccionada) ?? _routine.serieMin;
   }
 
-  // Delete an item
   void _deleteItem(int id) async {
-    await SQLHelper.deleteItem(id);
-    await SQLHelpExer.deleteItemRout(id);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Success removing routine.'),
-    ));
+    try {
+      await SQLHelper.deleteItem(id);
+      await SQLHelpExer.deleteItemRout(id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Success removing routine.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error removing routine: $e')),
+      );
+    }
   }
 
-  isUserR(Routine _routine) {
+  List<Widget> isUserR(Routine _routine) {
     if (_routine.foto == 'training') {
       return <Widget>[
         IconButton(
-            color: Colors.red,
-            icon: Icon(Icons.delete),
-            onPressed: () {
-              _deleteItem(_routine.id);
-              Navigator.pushNamedAndRemoveUntil(
-                  context, 'home', ModalRoute.withName('/'));
-            })
+          color: Colors.red,
+          icon: Icon(Icons.delete),
+          onPressed: () {
+            _deleteItem(_routine.id);
+            Navigator.pushNamedAndRemoveUntil(
+                context, 'home', ModalRoute.withName('/'));
+          },
+        ),
       ];
     }
-    return <Widget>[
-      SizedBox(
-        width: 1.0,
-      )
-    ];
+    return <Widget>[SizedBox(width: 1.0)];
   }
 }

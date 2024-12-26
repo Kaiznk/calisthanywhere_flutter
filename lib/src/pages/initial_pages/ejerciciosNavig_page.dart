@@ -26,6 +26,7 @@ class EjerciciosNavigPage extends StatelessWidget {
           Image(
               height: 300.0,
               fit: BoxFit.cover,
+              width: double.infinity,
               image: AssetImage('assets/images/$lugar.jpg')),
           Container(
             padding: EdgeInsets.all(10.0),
@@ -42,7 +43,7 @@ class EjerciciosNavigPage extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30.0),
-            color: Theme.of(context).bottomAppBarColor,
+            color: Theme.of(context).primaryColor,
             boxShadow: <BoxShadow>[
               BoxShadow(
                   color: Colors.black26,

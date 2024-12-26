@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:calistenico/src/models/datos_rout.dart';
 import 'package:calistenico/src/models/exercise_model.dart';
 import 'package:calistenico/src/pages/Rutina/newRoutine/db/sql_helpExer.dart';
@@ -110,9 +112,11 @@ class _ExercNewRoutineState2 extends State<ExercNewRoutine2> {
             width: 440.0,
             margin: EdgeInsets.symmetric(horizontal: 7.0),
             // ignore: deprecated_member_use
-            child: RaisedButton(
-              color: const Color(0xFF0E0E0E),
-              textColor: const Color(0xFFE0E0E6),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                foregroundColor: const Color(0xFFE0E0E6),
+                backgroundColor: const Color(0xFF0E0E0E), // Color del texto
+              ),
               onPressed: () async {
                 if (cantRepets == -1 || numEjerSerie == -1) {
                   Fluttertoast.showToast(
@@ -219,7 +223,7 @@ class _ExercNewRoutineState2 extends State<ExercNewRoutine2> {
   }
 
   // Insert a new journal to the database
-  Future<void> _addItem() async {
+  FutureOr<void> _addItem() async {
     int idR = -777;
     idR = await SQLHelper.createItem(
         _dataNewRout.rutina.nombRout,
@@ -237,7 +241,7 @@ class _ExercNewRoutineState2 extends State<ExercNewRoutine2> {
     ));
   }
 
-  Future<void> _addItemExer(int idR) async {
+  FutureOr<void> _addItemExer(int idR) async {
     for (int i = 0; i < _dataNewRout.rutina.ejercR.length; i++) {
       await SQLHelpExer.createItem(
           _dataNewRout.rutina.ejercR[i].nombre,

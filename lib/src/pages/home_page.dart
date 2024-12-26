@@ -1,9 +1,9 @@
 import 'package:calistenico/src/menu/constant.dart';
-import 'package:calistenico/src/pages/initial_pages/consejosNavig_page.dart';
 import 'package:calistenico/src/pages/initial_pages/ejerciciosNavig_page.dart';
+import 'package:calistenico/src/pages/initial_pages/personalTNavig_page.dart';
 import 'package:calistenico/src/pages/initial_pages/rutinasNavig_page.dart';
 import 'package:flutter/material.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
@@ -53,8 +53,8 @@ class _HomePageState extends State<HomePage> {
             icon: ImageIcon(AssetImage('assets/images/icon_wm.png')),
             label: 'Routines'),
         BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/images/advice.png')),
-            label: 'Tips'),
+            icon: ImageIcon(AssetImage('assets/images/pt_icon.png')),
+            label: 'Personal Training'),
       ],
     );
   }
@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
       case 1:
         return RutinasNavigPage();
       case 2:
-        return ConsejosNavigPage();
+        return PersonalTrainerPage();
 
       default:
         return RutinasNavigPage();
@@ -75,11 +75,12 @@ class _HomePageState extends State<HomePage> {
 
   void choiceAction(String choice) async {
     if (choice == Constants.Rate_us) {
-      const url = 'https://play.google.com/store/apps';
-      if (await canLaunch(url)) {
-        await launch(url);
+      final Uri url = Uri.parse('https://play.google.com/store/apps/');
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url,
+            mode: LaunchMode.externalApplication); // Abre con navegador externo
       } else {
-        throw 'could not launch $url';
+        throw 'Could not launch $url';
       }
     } else if (choice == Constants.Share) {
       final RenderBox box = context.findRenderObject() as RenderBox;
@@ -90,11 +91,11 @@ class _HomePageState extends State<HomePage> {
     } else if (choice == Constants.Setting) {
       Navigator.pushNamed(context, 'settings');
     } else if (choice == Constants.Contact_us) {
-      const url = 'https://facebook.com/kaiznk.corp';
-      if (await canLaunch(url)) {
-        await launch(url);
+      final Uri url = Uri.parse('https://facebook.com/kaiznk.corp');
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        throw 'could not launch $url';
+        throw 'Could not launch $url';
       }
     }
   }

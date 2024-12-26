@@ -1,0 +1,7 @@
+<resources>
+    <string name="gcm_defaultSenderId">1022587018643</string>
+    <string name="google_api_key">AIzaSyC8Ky-6fwm-ycP55-p2nWZlNeND5Nlxm0o</string>
+    <string name="google_app_id">1:1022587018643:android:3233f665d6c2b0e507dc66</string>
+    <string name="google_crash_reporting_api_key">AIzaSyC8Ky-6fwm-ycP55-p2nWZlNeND5Nlxm0o</string> <!-- Mismo valor que google_api_key -->
+    <string name="project_id">calisthanywhere</string>
+</resources>

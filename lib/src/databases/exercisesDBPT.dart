@@ -22,14 +22,24 @@ class ExercisesDBPT {
   List<Exercise> getListExer() {
     final List<Exercise> exerciseList = [
       Exercise(
-        'Heel Raise Squats',
+        'Chest Press Machine',
         '⭐⭐',
-        'Quads, Glutes, Calves',
-        'Basic squat technique',
-        'Strengthen calves and improve stability and balance.',
-        'From a low squat position, lift your heels off the ground and hold briefly before lowering them.',
-        'Engage your core and maintain balance when raising your heels. Avoid jerky movements.',
-        'https://imgur.com/ZNVTS7B',
+        'Chest, Triceps, Shoulders',
+        'Maintain a stable seated position with handles at chest level.',
+        'Strengthens the chest, triceps, and shoulders, and improves pushing strength.',
+        'Sit on the machine with your back firmly against the pad. Push the handles forward until your arms are fully extended, then slowly return to the starting position.',
+        'Keep your back flat against the pad and avoid locking your elbows during the extension phase. Control the movement throughout.',
+        'https://imgur.com/YvNTcpO', // Reemplaza con la URL de la imagen correcta.
+      ),
+      Exercise(
+        'Chest Flies Machine',
+        '⭐⭐',
+        'Pectorals, Shoulders',
+        'Basic chest fly technique',
+        'Enhances chest muscle definition and improves shoulder flexibility.',
+        'Sit on the machine with your back firmly pressed against the pad. Grasp the handles and bring your arms together in front of your chest in a controlled motion. Slowly return to the starting position.',
+        'Keep your elbows slightly bent to avoid joint strain. Maintain control during the movement and avoid locking out at the end of the motion.',
+        'https://imgur.com/hSrCv52',
       ),
     ];
 

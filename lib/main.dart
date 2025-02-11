@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:calistenico/splash.dart';
-import 'package:calistenico/src/databases/exercisesDBPT.dart';
 import 'package:calistenico/src/pages/Ejercicios/detalles_page.dart';
 import 'package:calistenico/src/pages/Ejercicios/suelo_page.dart';
 import 'package:calistenico/src/pages/Ejercicios/barra_page.dart';
@@ -20,19 +19,21 @@ import 'package:calistenico/src/pages/settings_pages/settings_page.dart';
 import 'package:calistenico/src/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:backendless_sdk/backendless_sdk.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool isDarkMode = prefs.getBool("isDarkTheme") ?? false;
-/*
-  // Llamar a la función para subir ejercicios
-  final exercisesDB = ExercisesDBPT();
-  await exercisesDB.uploadExercisesToFirestore(exercisesDB.getListExer());
-*/
+
+  // Inicializar Backendless
+  await Backendless.initApp(
+    applicationId: "E64A3656-6C21-495E-811B-66D223AE5176",
+    androidApiKey: "C30DEE70-D417-488A-93C2-1E8B02A3AF87",
+    iosApiKey: "95D364EF-21A1-4740-8D73-DC19F7A8C9D6",
+  );
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(isDarkMode: isDarkMode),

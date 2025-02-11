@@ -2962,7 +2962,7 @@ class RoutinesDB {
     } else if (nomser == "2 by 2 Full Body - Pull-ups") {
       List<int> repe = [5, -20, 5, -40, 5, -40];
       rep = repe;
-    } else if (nomser == "2 by 2 Full Body - Push-ups") {
+    } else if (nomser == "2 by 2 Full Body - Pushups") {
       List<int> repe = [8, -30, 12, -20, 10, -10];
       rep = repe;
     } else if (nomser == "2 by 2 Full Body - Core") {

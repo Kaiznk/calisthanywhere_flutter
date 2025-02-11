@@ -1,242 +1,127 @@
-import 'package:calistenico/src/models/routine_model.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:backendless_sdk/backendless_sdk.dart';
 
-class PersonalTrainerOptionsPage extends StatefulWidget {
+class ClientDashboard extends StatefulWidget {
   final String userId;
 
-  PersonalTrainerOptionsPage({required this.userId});
+  const ClientDashboard({Key? key, required this.userId}) : super(key: key);
 
   @override
-  _PersonalTrainerOptionsPageState createState() =>
-      _PersonalTrainerOptionsPageState();
+  _ClientDashboardState createState() => _ClientDashboardState();
 }
 
-class _PersonalTrainerOptionsPageState
-    extends State<PersonalTrainerOptionsPage> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class _ClientDashboardState extends State<ClientDashboard> {
+  Future<List<dynamic>> _fetchClientWorkouts() async {
+    DataQueryBuilder queryBuilder = DataQueryBuilder();
+    queryBuilder.whereClause = "client_id = '${widget.userId}'";
 
-  Stream<List<Routine>> _fetchClientWorkouts() {
-    return _firestore
-        .collection('routinesClient')
-        .where('userId', isEqualTo: widget.userId)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Routine.fromMap(
-                {"id": doc.id, ...doc.data() as Map<String, dynamic>}))
-            .toList());
+    List<dynamic>? result =
+        await Backendless.data.of("workouts").find(queryBuilder: queryBuilder);
+    return result ?? [];
   }
 
-  Stream<List<Map<String, dynamic>>> _fetchTasks() {
-    return _firestore
-        .collection('tasks')
-        .where('clientId', isEqualTo: widget.userId)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => {"id": doc.id, ...doc.data() as Map<String, dynamic>})
-            .toList());
+  Future<List<dynamic>> _fetchTasks() async {
+    DataQueryBuilder queryBuilder = DataQueryBuilder();
+    queryBuilder.whereClause = "client_id = '${widget.userId}'";
+
+    List<dynamic>? result =
+        await Backendless.data.of("tasks").find(queryBuilder: queryBuilder);
+    return result ?? [];
   }
 
-  // Método para obtener el nombre de usuario del cliente
   Future<String> _fetchUsername() async {
     try {
-      DocumentSnapshot userDoc = await _firestore
-          .collection('users') // Aquí asumo que tienes una colección 'users'
-          .doc(widget.userId)
-          .get();
-
-      if (userDoc.exists) {
-        return userDoc['username'] ??
-            'Client'; // Devuelve el username si existe
-      } else {
-        return 'Client'; // Valor por defecto si no se encuentra el usuario
-      }
+      Map<dynamic, dynamic>? user =
+          await Backendless.data.of("users").findById(widget.userId);
+      return user?["name"] ?? "Client"; // Cambié "full_name" por "name"
     } catch (e) {
-      return 'Client'; // En caso de error, devolver 'Client'
+      debugPrint("Error fetching username: $e");
+      return "Client"; // Si no se encuentra el nombre, se muestra "Client"
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
+    var theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: FutureBuilder<String>(
           future: _fetchUsername(),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Text("Loading...");
-            }
-            if (snapshot.hasError) {
-              return const Text("Error loading username");
-            }
-            return Text("Welcome, ${snapshot.data ?? 'Client'}!");
+            return Text(
+              "Welcome, ${snapshot.data ?? 'Client'}!",
+              style: TextStyle(color: Colors.white),
+            );
           },
         ),
         centerTitle: true,
         backgroundColor: theme.primaryColor,
         elevation: 5.0,
       ),
-      body: Container(
-        color: theme.scaffoldBackgroundColor,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              _buildWelcomeBanner(),
-              const SizedBox(height: 16),
-              _buildSectionTitle("Upcoming Workouts"),
-              StreamBuilder<List<Routine>>(
-                stream: _fetchClientWorkouts(),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Workouts", style: theme.textTheme.titleLarge),
+            Expanded(
+              child: FutureBuilder<List<dynamic>>(
+                future: _fetchClientWorkouts(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Center(child: CircularProgressIndicator());
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text("No workouts available"));
                   }
-                  if (snapshot.hasError) {
-                    return Center(
-                        child:
-                            Text("Error loading workouts: ${snapshot.error}"));
-                  }
-                  List<Routine> workouts = snapshot.data ?? [];
-
-                  if (workouts.isEmpty) {
-                    return const Center(child: Text("No workouts available."));
-                  }
-
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: workouts.length,
-                      itemBuilder: (context, index) {
-                        Routine routine = workouts[index];
-                        return Card(
-                          color: theme.cardColor,
-                          child: ListTile(
-                            leading: Icon(Icons.fitness_center,
-                                color: theme.iconTheme.color),
-                            title: Text(routine.nombRout,
-                                style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold)),
-                            subtitle: Text(
-                              "Type: ${routine.tipoR}",
-                              style: TextStyle(color: Colors.blue),
-                            ),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                'routine_initial',
-                                arguments: routine,
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      var workout = snapshot.data![index];
+                      return ListTile(
+                        title:
+                            Text(workout['workout_name'] ?? 'Unnamed Workout'),
+                        subtitle:
+                            Text(workout['description'] ?? 'No description'),
+                      );
+                    },
                   );
                 },
               ),
-              const SizedBox(height: 16),
-              _buildSectionTitle("Tasks"),
-              StreamBuilder<List<Map<String, dynamic>>>(
-                stream: _fetchTasks(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(
-                        child: Text("Error loading tasks: ${snapshot.error}"));
-                  }
-                  List<Map<String, dynamic>> tasks = snapshot.data ?? [];
-
-                  if (tasks.isEmpty) {
-                    return const Center(child: Text("No tasks available."));
-                  }
-
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: tasks.length,
-                      itemBuilder: (context, index) {
-                        Map<String, dynamic> task = tasks[index];
-                        String formattedDate = task['createdAt'] != null
-                            ? DateFormat.yMMMd().add_jm().format(
-                                  (task['createdAt'] as Timestamp).toDate(),
-                                )
-                            : 'Unknown date';
-
-                        return Card(
-                          color: theme.cardColor,
-                          child: ListTile(
-                            leading: Icon(Icons.task_alt,
-                                color: theme.iconTheme.color),
-                            title: Text(task['title'] ?? 'Task',
-                                style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold)),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(task['description'] ?? 'No description',
-                                    style: TextStyle(color: Colors.blue)),
-                                const SizedBox(height: 4),
-                                Text('Created: $formattedDate',
-                                    style: TextStyle(color: Colors.blue)),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Text(
-        title,
-        style: TextStyle(
-            fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blue),
-      ),
-    );
-  }
-
-  Widget _buildWelcomeBanner() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.teal[300],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.person, size: 40, color: Colors.white),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              "Welcome back, let's achieve your goals today!",
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
             ),
-          ),
-        ],
+            SizedBox(height: 16),
+            Text("Tasks", style: theme.textTheme.titleLarge),
+            Expanded(
+              child: FutureBuilder<List<dynamic>>(
+                future: _fetchTasks(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text("No tasks available"));
+                  }
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      var task = snapshot.data![index];
+                      String formattedDate = task['created_at'] != null
+                          ? DateFormat.yMMMd().add_jm().format(
+                              DateTime.tryParse(task['created_at']) ??
+                                  DateTime.now())
+                          : 'Unknown date';
+                      return ListTile(
+                        title: Text(task['task_name'] ?? 'Unnamed Task'),
+                        subtitle: Text("Due: $formattedDate"),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

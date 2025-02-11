@@ -1,7 +1,7 @@
 import 'package:calistenico/src/models/exercise_model.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:backendless_sdk/backendless_sdk.dart';
 
 class NewRoutine extends StatefulWidget {
   @override
@@ -30,13 +30,10 @@ class _NewRoutineState extends State<NewRoutine> {
 
   List<Exercise> _kL = [];
 
-  // Inicializamos Firestore
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   @override
   void initState() {
     super.initState();
-    _loadExercisesFromFirestore();
+    _loadExercisesFromBackendless();
   }
 
   @override
@@ -45,19 +42,28 @@ class _NewRoutineState extends State<NewRoutine> {
     super.dispose();
   }
 
-  Future<void> _loadExercisesFromFirestore() async {
+  Future<void> _loadExercisesFromBackendless() async {
     List<Exercise> exerciseList = [];
     try {
-      final querySnapshot = await _firestore.collection('exercises').get();
-      for (var doc in querySnapshot.docs) {
-        exerciseList.add(Exercise.fromMap(doc.data()));
+      DataQueryBuilder queryBuilder = DataQueryBuilder()
+        ..sortBy = ["created DESC"]; // Orden opcional
+
+      final List<dynamic>? rawResults = await Backendless.data
+          .of("exercises")
+          .find(queryBuilder: queryBuilder);
+
+      if (rawResults != null) {
+        for (var item in rawResults) {
+          exerciseList.add(Exercise.fromMap(Map<String, dynamic>.from(item)));
+        }
       }
+
       setState(() {
         _listExerc = exerciseList;
         _cargarDatosinSelected();
       });
     } catch (e) {
-      print('Error fetching exercises: $e');
+      print('Error fetching exercises from Backendless: $e');
     }
   }
 

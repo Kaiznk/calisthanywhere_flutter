@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:backendless_sdk/backendless_sdk.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   @override
@@ -8,17 +8,32 @@ class ForgotPasswordPage extends StatefulWidget {
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _emailController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   void _sendPasswordReset() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter your email')),
+      );
+      return;
+    }
+
     try {
-      await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
+      // Enviar enlace de restablecimiento de contraseña
+      await Backendless.userService.restorePassword(email);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Password reset link sent to your email')),
       );
+    } on BackendlessException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Error: ${e.message ?? 'Something went wrong'}')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        SnackBar(
+            content: Text('An unexpected error occurred: ${e.toString()}')),
       );
     }
   }

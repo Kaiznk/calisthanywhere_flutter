@@ -1,4 +1,3 @@
-import 'package:calistenico/src/models/exercise_model.dart';
 import 'package:calistenico/src/models/routine_model.dart';
 import 'package:flutter/material.dart';
 import 'package:calistenico/src/databases/routinesDB.dart'; // Asegúrate de importar el archivo correcto

@@ -1,8 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:calistenico/src/pages/PersonalT/PersonalTrainerOptionsPage.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Importa FirebaseAuth
-import '../PersonalT/PersonalTrainerOptionsPage.dart';
+import 'package:backendless_sdk/backendless_sdk.dart'; // Import Backendless SDK
 import '../PersonalT/ForgotPasswordPage.dart';
 import '../PersonalT/SignUpPage.dart';
 
@@ -12,7 +11,6 @@ class PersonalTrainerPage extends StatefulWidget {
 }
 
 class _PersonalTrainerPageState extends State<PersonalTrainerPage> {
-  final _auth = FirebaseAuth.instance;
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -40,58 +38,46 @@ class _PersonalTrainerPageState extends State<PersonalTrainerPage> {
     }
 
     try {
-      // Autenticación con Firebase
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: _usernameController.text.trim(),
-        password: _passwordController.text.trim(),
+      // Iniciar sesión con Backendless
+      var user = await Backendless.userService.login(
+        _usernameController.text.trim(),
+        _passwordController.text.trim(),
       );
 
-      // Obtén el correo electrónico autenticado
-      final userEmail = userCredential.user?.email;
+      if (user != null) {
+        // Busca el userId en Backendless
+        var dataQueryBuilder = DataQueryBuilder()
+          ..whereClause = "email = '${_usernameController.text.trim()}'";
 
-      if (userEmail != null) {
-        // Busca el userId en Firestore
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .where('email', isEqualTo: userEmail)
-            .limit(1)
-            .get()
-            .then((querySnapshot) => querySnapshot.docs.first);
+        var result = await Backendless.data
+            .of("users")
+            .find(queryBuilder: dataQueryBuilder);
 
-        final userId = userDoc.id;
+        if (result!.isNotEmpty) {
+          final userId = result.first["objectId"];
 
-        // Navega a la siguiente página con el userId
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PersonalTrainerOptionsPage(userId: userId),
-          ),
-        );
-      } else {
-        throw FirebaseAuthException(
-          code: 'email-not-found',
-          message: 'Email not found in Firestore.',
-        );
+          // Navega a la siguiente página con el userId
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ClientDashboard(userId: userId),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('User not found in the database.')),
+          );
+        }
       }
-    } on FirebaseAuthException catch (e) {
-      String errorMessage;
-      switch (e.code) {
-        case 'user-not-found':
-          errorMessage = 'No user found for that email.';
-          break;
-        case 'wrong-password':
-          errorMessage = 'Wrong password provided.';
-          break;
-        default:
-          errorMessage = 'An error occurred. Please try again.';
-      }
-
+    } on BackendlessException catch (e) {
+      String errorMessage = e.message ?? 'An error occurred. Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage)),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred: ${e.toString()}')),
+        SnackBar(
+            content: Text('An unexpected error occurred: ${e.toString()}')),
       );
     } finally {
       setState(() {
@@ -202,7 +188,7 @@ class _PersonalTrainerPageState extends State<PersonalTrainerPage> {
                       text: TextSpan(
                         text: "Don't have an account? ",
                         style: TextStyle(
-                          color: Colors.black,
+                          color: Colors.white60,
                           fontSize: 16,
                         ),
                         children: <TextSpan>[

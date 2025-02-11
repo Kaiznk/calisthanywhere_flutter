@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:backendless_sdk/backendless_sdk.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String email;
+
   ResetPasswordPage({required this.email});
 
   @override
@@ -10,26 +11,25 @@ class ResetPasswordPage extends StatefulWidget {
 }
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
-  final _passwordController = TextEditingController();
-  final _auth = FirebaseAuth.instance;
+  final _formKey = GlobalKey<FormState>();
 
-  void _resetPassword() async {
+  void _sendPasswordResetLink() async {
     try {
-      // Obtiene el email y la nueva contraseña
-      String newPassword = _passwordController.text.trim();
-
-      // Cambia la contraseña del usuario actual
-      await _auth.currentUser?.updatePassword(newPassword);
+      await Backendless.userService.restorePassword(widget.email);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Password has been reset successfully")),
+        SnackBar(content: Text("Password reset link sent to your email.")),
       );
 
-      // Redirige al usuario a la página de login
+      // Navigate back to login after showing the confirmation
       Navigator.of(context).pushReplacementNamed('/login');
+    } on BackendlessException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${e.message ?? 'An error occurred.'}")),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}")),
+        SnackBar(content: Text("Unexpected error: ${e.toString()}")),
       );
     }
   }
@@ -40,29 +40,23 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       appBar: AppBar(title: Text("Reset Password")),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Enter your new password",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'New Password',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "An email will be sent to reset your password.",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _resetPassword,
-              child: Text("Reset Password"),
-            ),
-          ],
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _sendPasswordResetLink,
+                child: Text("Send Reset Link"),
+              ),
+            ],
+          ),
         ),
       ),
     );

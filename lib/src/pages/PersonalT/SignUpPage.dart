@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:backendless_sdk/backendless_sdk.dart';
 import 'additional_info_page.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -13,38 +12,56 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   void _signUp() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Crear el usuario en Firebase Authentication
-        UserCredential userCredential =
-            await _auth.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+        // Cerrar sesión antes de registrar un nuevo usuario
+        await Backendless.userService.logout();
+
+        // Crear usuario en Backendless
+        Map<String, dynamic> userData = {
+          "name":
+              _usernameController.text.trim(), // Cambié "username" por "name"
+          "email": _emailController.text.trim(),
+          "password": _passwordController.text.trim(),
+          "role": "cliente", // Rol de cliente
+        };
+
+        BackendlessUser? newUser = await Backendless.userService.register(
+          BackendlessUser.fromJson(userData),
         );
 
-        // Guardar la información del usuario en Firestore, incluyendo el rol de cliente
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
-          'username': _usernameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'userId': userCredential.user!.uid,
-          'role': 'cliente', // Añadimos el rol de cliente
-        });
+        if (newUser != null) {
+          // Iniciar sesión inmediatamente después de registrarse para obtener el token
+          BackendlessUser? loggedInUser = await Backendless.userService.login(
+            _emailController.text.trim(),
+            _passwordController.text.trim(),
+            stayLoggedIn: true, // Mantener sesión iniciada
+          );
 
-        // Navegar a la página de información adicional
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                AdditionalInfoPage(userId: userCredential.user!.uid),
-          ),
-        );
+          if (loggedInUser != null) {
+            String? userId = loggedInUser.getUserId();
+
+            if (userId != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AdditionalInfoPage(userId: userId),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content:
+                        Text("Error: No se pudo obtener el ID del usuario.")),
+              );
+            }
+          }
+        }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error al registrarse: ${e.toString()}")),
+          SnackBar(content: Text("Error al registrarse: $e")),
         );
       }
     }

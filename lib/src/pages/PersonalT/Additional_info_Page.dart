@@ -1,24 +1,24 @@
 import 'package:calistenico/src/pages/PersonalT/PersonalTrainerOptionsPage.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:backendless_sdk/backendless_sdk.dart';
 
 class AdditionalInfoPage extends StatefulWidget {
   final String userId;
+
   AdditionalInfoPage({required this.userId});
 
   @override
-  _AdditionalInfoPageState createState() => _AdditionalInfoPageState();
+  _AdditionalInfoScreenState createState() => _AdditionalInfoScreenState();
 }
 
-class _AdditionalInfoPageState extends State<AdditionalInfoPage> {
+class _AdditionalInfoScreenState extends State<AdditionalInfoPage> {
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _goalController = TextEditingController();
   final TextEditingController entrenadorController = TextEditingController();
-  String _selectedBodyType = 'Ectomorph'; // Default body type
+  String _selectedBodyType = "";
 
   void _saveAdditionalInfo() async {
-    // Validar que los campos height y weight sean numéricos
     final height = double.tryParse(_heightController.text.trim());
     final weight = double.tryParse(_weightController.text.trim());
 
@@ -32,54 +32,44 @@ class _AdditionalInfoPageState extends State<AdditionalInfoPage> {
     }
 
     try {
-      // Obtener el nombre del entrenador ingresado
-      String? entrenadorName = entrenadorController.text.trim();
+      // Obtener el `objectId` real del usuario
+      var queryBuilder = DataQueryBuilder()
+        ..whereClause = "objectId = '${widget.userId}'";
 
-      // Buscar el entrenador por nombre o asignar el que tiene menos clientes
-      String assignedTrainerName;
+      var users =
+          await Backendless.data.of('users').find(queryBuilder: queryBuilder);
 
-      if (entrenadorName.isNotEmpty) {
-        // Verificar si existe un entrenador con ese nombre
-        final entrenadorSnapshot = await FirebaseFirestore.instance
-            .collection('trainers')
-            .where('name', isEqualTo: entrenadorName)
-            .get();
-
-        if (entrenadorSnapshot.docs.isNotEmpty) {
-          assignedTrainerName = entrenadorSnapshot.docs.first['name'];
-        } else {
-          // Si el entrenador ingresado no existe, asignar al entrenador con menos clientes
-          assignedTrainerName =
-              await _obtenerEntrenadorConMenosClientesPorNombre();
-        }
-      } else {
-        // Si no se ingresó ningún nombre, asignar al entrenador con menos clientes
-        assignedTrainerName =
-            await _obtenerEntrenadorConMenosClientesPorNombre();
+      if (users!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: User not found.")),
+        );
+        return;
       }
 
-      // Actualizar la información del usuario en la base de datos
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.userId)
-          .update({
-        'height': height,
-        'weight': weight,
-        'goal': _goalController.text.trim(),
-        'bodyType': _selectedBodyType,
-        'trainerName': assignedTrainerName, // Asignar entrenador al usuario
-      });
+      String objectId =
+          users!.first['objectId']; // Obtener el ID real del usuario
+      String? entrenadorName = entrenadorController.text.trim();
+      String assignedTrainerName = await _assignTrainer(entrenadorName);
+
+      Map<String, dynamic> updatedUser = {
+        "objectId": objectId, // Usar el objectId correcto
+        "height": height,
+        "weight": weight,
+        "goal": _goalController.text.trim(),
+        "bodyType": _selectedBodyType,
+        "trainerName": assignedTrainerName,
+      };
+
+      await Backendless.data.of('users').save(updatedUser);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Information saved successfully")),
       );
 
-      // Redirigir a la página PersonalTrainerOptionsPage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-                PersonalTrainerOptionsPage(userId: widget.userId)),
+            builder: (context) => ClientDashboard(userId: widget.userId)),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -88,106 +78,96 @@ class _AdditionalInfoPageState extends State<AdditionalInfoPage> {
     }
   }
 
-// Función para obtener el entrenador con menos clientes por nombre
-  Future<String> _obtenerEntrenadorConMenosClientesPorNombre() async {
-    final entrenadoresSnapshot =
-        await FirebaseFirestore.instance.collection('trainers').get();
-
-    String entrenadorName = '';
-    int menorNumClientes = double.maxFinite.toInt();
-
-    for (var doc in entrenadoresSnapshot.docs) {
-      int numClientes = doc['numClientes'] as int;
-      if (numClientes < menorNumClientes) {
-        menorNumClientes = numClientes;
-        entrenadorName = doc['name'];
-      }
+  Future<String> _assignTrainer(String? entrenadorName) async {
+    if (entrenadorName != null && entrenadorName.isNotEmpty) {
+      return entrenadorName;
     }
-    return entrenadorName;
+    return await _obtenerEntrenadorConMenosClientesPorNombre();
+  }
+
+  Future<String> _obtenerEntrenadorConMenosClientesPorNombre() async {
+    try {
+      var trainers = await Backendless.data.of('trainers').find();
+      if (trainers == null || trainers.isEmpty) {
+        return 'DefaultTrainer'; // Asignar un entrenador predeterminado
+      }
+
+      Map<String, int> trainerCounts = {};
+
+      for (var trainer in trainers) {
+        String trainerName = trainer['name'];
+        var queryBuilder = DataQueryBuilder()
+          ..whereClause = "trainerName = '$trainerName'";
+
+        var clients =
+            await Backendless.data.of('users').find(queryBuilder: queryBuilder);
+        trainerCounts[trainerName] = clients?.length ?? 0;
+      }
+
+      // Encontrar el entrenador con menos clientes
+      String assignedTrainer = trainers.first['name'];
+      int minClients =
+          trainerCounts[assignedTrainer] ?? double.maxFinite.toInt();
+
+      trainerCounts.forEach((trainer, count) {
+        if (count < minClients) {
+          assignedTrainer = trainer;
+          minClients = count;
+        }
+      });
+
+      return assignedTrainer;
+    } catch (e) {
+      print("Error finding trainer: ${e.toString()}");
+      return 'DefaultTrainer'; // En caso de error, asignar un entrenador predeterminado
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Additional Information'),
-        backgroundColor: Colors.black87,
-      ),
+      appBar: AppBar(title: Text("Additional Information")),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Provide Additional Information',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: entrenadorController,
-              decoration: InputDecoration(
-                labelText: 'ID del entrenador (opcional)',
-              ),
-            ),
-            SizedBox(height: 20),
             TextField(
               controller: _heightController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Height (inches)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.height),
-              ),
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: "Height (cm)"),
             ),
-            SizedBox(height: 20),
             TextField(
               controller: _weightController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Weight (lbs)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.fitness_center),
-              ),
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: "Weight (kg)"),
             ),
-            SizedBox(height: 20),
             TextField(
               controller: _goalController,
-              decoration: InputDecoration(
-                labelText: 'Goal',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.flag),
-              ),
+              decoration: InputDecoration(labelText: "Goal"),
             ),
-            SizedBox(height: 20),
-            // Dropdown for Body Type
-            DropdownButtonFormField<String>(
+            DropdownButton<String>(
               value: _selectedBodyType,
-              decoration: InputDecoration(
-                labelText: 'Body Type',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
-              ),
-              items: ['Ectomorph', 'Mesomorph', 'Endomorph']
-                  .map((bodyType) => DropdownMenuItem(
-                        value: bodyType,
-                        child: Text(bodyType),
-                      ))
-                  .toList(),
-              onChanged: (value) {
+              items: ["", "Ectomorph", "Mesomorph", "Endomorph"]
+                  .map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value.isEmpty ? "Select Body Type" : value),
+                );
+              }).toList(),
+              onChanged: (newValue) {
                 setState(() {
-                  _selectedBodyType = value!;
+                  _selectedBodyType = newValue ?? "";
                 });
               },
+            ),
+            TextField(
+              controller: entrenadorController,
+              decoration: InputDecoration(labelText: "Trainer Name (optional)"),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveAdditionalInfo,
-              child: Text('Complete'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                textStyle: TextStyle(fontSize: 18),
-              ),
+              child: Text("Save"),
             ),
           ],
         ),

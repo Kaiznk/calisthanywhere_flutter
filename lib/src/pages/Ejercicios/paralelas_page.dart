@@ -1,13 +1,15 @@
-import 'package:backendless_sdk/backendless_sdk.dart';
+import 'package:calistenico/src/databases/exercisesDB.dart';
 import 'package:flutter/material.dart';
 import 'package:calistenico/src/models/exercise_model.dart';
 
 class ParalelasPage extends StatelessWidget {
+  final ExercisesDB exercisesDB = ExercisesDB();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('CalisthAnyWhere'),
+        title: Text('CalisthAnyWhere - Paralelas'),
       ),
       body: FutureBuilder<List<Exercise>>(
         future: _loadExercises(),
@@ -37,26 +39,9 @@ class ParalelasPage extends StatelessWidget {
   }
 
   Future<List<Exercise>> _loadExercises() async {
-    DataQueryBuilder queryBuilder = DataQueryBuilder()
-      ..whereClause = "`|__type` = 'paralelas'"
-      ..sortBy = ["created DESC"];
-
-    final List<dynamic>? rawResults =
-        await Backendless.data.of("exercises").find(queryBuilder: queryBuilder);
-
-    return rawResults?.map((doc) {
-          return Exercise(
-            doc['|__nombre'] ?? 'Ejercicio sin nombre',
-            doc['|__nivel'] ?? 'Desconocido',
-            doc['|__muscle'] ?? 'Sin información',
-            doc['|__previos'] ?? 'Sin información',
-            doc['|__ayudaA'] ?? 'Sin información',
-            doc['|__descripcion'] ?? 'Sin descripción',
-            doc['|__consejo'] ?? 'Sin consejo',
-            doc['|__foto'] ?? 'default_image',
-          );
-        }).toList() ??
-        [];
+    return Future.delayed(Duration(milliseconds: 500), () {
+      return ExercisesDB().getParalelas();
+    });
   }
 
   Widget _cargarCards(BuildContext context, Exercise exercise) {

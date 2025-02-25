@@ -5,6 +5,8 @@ import 'package:calistenico/src/pages/Ejercicios/suelo_page.dart';
 import 'package:calistenico/src/pages/Ejercicios/barra_page.dart';
 import 'package:calistenico/src/pages/Ejercicios/paralelas_page.dart';
 import 'package:calistenico/src/pages/PersonalT/SignUpPage.dart';
+import 'package:calistenico/src/pages/PersonalT/routineProcess/ejerTraining.dart';
+import 'package:calistenico/src/pages/PersonalT/routineProcess/timerTraining.dart';
 import 'package:calistenico/src/pages/Rutina/ejer_rout_page.dart';
 import 'package:calistenico/src/pages/Rutina/end_rout_page.dart';
 import 'package:calistenico/src/pages/Rutina/newRoutine/exerc_newRoutine2_page.dart';
@@ -19,13 +21,13 @@ import 'package:calistenico/src/pages/settings_pages/settings_page.dart';
 import 'package:calistenico/src/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:backendless_sdk/backendless_sdk.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  bool isDarkMode = prefs.getBool("isDarkTheme") ?? false;
+
+  // Obtener tema guardado
+  bool isDarkMode = await ThemeProvider.getSavedTheme();
 
   // Inicializar Backendless
   await Backendless.initApp(
@@ -60,7 +62,9 @@ class MyApp extends StatelessWidget {
         'detalle': (context) => DetallesPage(),
         'routine_initial': (context) => RoutineInitialPage(),
         'ejerroutpage': (context) => EjerRoutPage(),
+        'ejertraining': (context) => EjerRtraining(),
         'timerpage': (context) => TimerPage(),
+        'timertraining': (context) => TimerTraining(),
         'endroutpage': (context) => EndRoutPage(),
         'newroutine': (context) => NewRoutine(),
         'exercnewrout': (context) => ExercNewRoutine(),

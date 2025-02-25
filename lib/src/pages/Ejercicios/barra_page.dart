@@ -1,17 +1,19 @@
-import 'package:backendless_sdk/backendless_sdk.dart';
+import 'package:calistenico/src/databases/exercisesDB.dart';
 import 'package:flutter/material.dart';
 import 'package:calistenico/src/models/exercise_model.dart';
 
 class BarraPage extends StatelessWidget {
+  final ExercisesDB exercisesDB = ExercisesDB();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('CalisthAnyWhere'),
+        title: Text('CalisthAnyWhere - Barras'),
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
+      body: FutureBuilder<List<Exercise>>(
         future: _loadExercises(),
-        builder: (context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+        builder: (context, AsyncSnapshot<List<Exercise>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
@@ -24,18 +26,7 @@ class BarraPage extends StatelessWidget {
             return Center(child: Text('No exercises found.'));
           }
 
-          final exercises = snapshot.data!.map((doc) {
-            return Exercise(
-              doc['|__nombre'] ?? 'Ejercicio sin nombre',
-              doc['|__nivel'] ?? 'Desconocido',
-              doc['|__muscle'] ?? 'Sin información',
-              doc['|__previos'] ?? 'Sin información',
-              doc['|__ayudaA'] ?? 'Sin información',
-              doc['|__descripcion'] ?? 'Sin descripción',
-              doc['|__consejo'] ?? 'Sin consejo',
-              doc['|__foto'] ?? 'default_image',
-            );
-          }).toList();
+          final exercises = snapshot.data!;
 
           return ListView.builder(
             padding: EdgeInsets.all(12.0),
@@ -47,17 +38,10 @@ class BarraPage extends StatelessWidget {
     );
   }
 
-  Future<List<Map<String, dynamic>>> _loadExercises() async {
-    DataQueryBuilder queryBuilder = DataQueryBuilder()
-      ..whereClause = "`|__type` = 'barra'"
-      ..sortBy = ["created DESC"];
-
-    final List<dynamic>? rawResults =
-        await Backendless.data.of("exercises").find(queryBuilder: queryBuilder);
-    return rawResults
-            ?.map((item) => Map<String, dynamic>.from(item))
-            .toList() ??
-        [];
+  Future<List<Exercise>> _loadExercises() async {
+    return Future.delayed(Duration(milliseconds: 500), () {
+      return ExercisesDB().getBarra();
+    });
   }
 
   Widget _cargarCards(BuildContext context, Exercise exercise) {

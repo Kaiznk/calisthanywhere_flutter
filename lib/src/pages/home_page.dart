@@ -4,7 +4,7 @@ import 'package:calistenico/src/pages/initial_pages/personalTNavig_page.dart';
 import 'package:calistenico/src/pages/initial_pages/rutinasNavig_page.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+// import 'package:url_launcher/url_launcher.dart'; // Comentado para desactivar url_launcher
 
 class HomePage extends StatefulWidget {
   @override
@@ -13,6 +13,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int currentIndex = 1;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,13 +76,12 @@ class _HomePageState extends State<HomePage> {
 
   void choiceAction(String choice) async {
     if (choice == Constants.Rate_us) {
-      final Uri url = Uri.parse('https://play.google.com/store/apps/');
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url,
-            mode: LaunchMode.externalApplication); // Abre con navegador externo
-      } else {
-        throw 'Could not launch $url';
-      }
+      // final Uri url = Uri.parse('https://play.google.com/store/apps/');
+      // if (await canLaunchUrl(url)) {
+      //   await launchUrl(url, mode: LaunchMode.externalApplication); // Abre con navegador externo
+      // } else {
+      //   throw 'Could not launch $url';
+      // }
     } else if (choice == Constants.Share) {
       final RenderBox box = context.findRenderObject() as RenderBox;
       Share.share(
@@ -91,12 +91,12 @@ class _HomePageState extends State<HomePage> {
     } else if (choice == Constants.Setting) {
       Navigator.pushNamed(context, 'settings');
     } else if (choice == Constants.Contact_us) {
-      final Uri url = Uri.parse('https://facebook.com/kaiznk.corp');
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        throw 'Could not launch $url';
-      }
+      // final Uri url = Uri.parse('https://facebook.com/kaiznk.corp');
+      // if (await canLaunchUrl(url)) {
+      //   await launchUrl(url, mode: LaunchMode.externalApplication);
+      // } else {
+      //   throw 'Could not launch $url';
+      // }
     }
   }
 }

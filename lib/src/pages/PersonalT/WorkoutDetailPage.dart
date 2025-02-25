@@ -1,122 +1,141 @@
-import 'dart:async';
+import 'package:calistenico/src/models/routine_T.dart';
 import 'package:flutter/material.dart';
-import 'package:calistenico/src/models/datos_rout.dart'; // Importamos DatosRout
-
-// Simulación de datos que normalmente se cargarían desde una base de datos en la nube
-Future<List<Map<String, dynamic>>> fetchExercises(String workoutId) async {
-  // Simulates fetching data from a cloud database
-  await Future.delayed(Duration(seconds: 2)); // Simulate a network delay
-  return [
-    {
-      'name': 'Push-ups',
-      'reps': 15,
-      'imageUrl': 'https://via.placeholder.com/150',
-    },
-    {
-      'name': 'Squats',
-      'reps': 20,
-      'imageUrl': 'https://via.placeholder.com/150',
-    },
-    {
-      'name': 'Lunges',
-      'reps': 12,
-      'imageUrl': 'https://via.placeholder.com/150',
-    },
-  ];
-}
+import 'package:calistenico/src/services/backendless_service.dart';
 
 class WorkoutDetailPage extends StatefulWidget {
-  final DatosRout datosRutina; // Usamos la clase DatosRout importada
+  final String workoutId;
 
-  WorkoutDetailPage({required this.datosRutina});
+  WorkoutDetailPage({required this.workoutId});
 
   @override
   _WorkoutDetailPageState createState() => _WorkoutDetailPageState();
 }
 
 class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
-  late Future<List<Map<String, dynamic>>> _exercisesFuture;
+  late Future<RoutineT?> _routineFuture;
+  final BackendlessService _backendlessService = BackendlessService();
 
   @override
   void initState() {
     super.initState();
-    _exercisesFuture = fetchExercises(widget.datosRutina.rutina.nombRout);
+    _routineFuture =
+        _backendlessService.fetchRoutineWithExercises(widget.workoutId);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.datosRutina.rutina.nombRout),
+        title: Text("Workout Details",
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.deepPurpleAccent,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Exercises',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _exercisesFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error loading exercises.'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('No exercises available.'));
-                  } else {
-                    final exercises = snapshot.data!;
-                    return ListView.builder(
-                      itemCount: exercises.length,
-                      itemBuilder: (context, index) {
-                        final exercise = exercises[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 8.0),
-                          child: ListTile(
-                            leading: Image.network(
-                              exercise['imageUrl'],
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
-                            ),
-                            title: Text(exercise['name']),
-                            trailing: Text('Reps: ${exercise['reps']}'),
+      body: FutureBuilder<RoutineT?>(
+        future: _routineFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+                child:
+                    CircularProgressIndicator(color: Colors.deepPurpleAccent));
+          } else if (snapshot.hasError || !snapshot.hasData) {
+            return Center(
+                child: Text('Error loading workout.',
+                    style: TextStyle(fontSize: 18, color: Colors.redAccent)));
+          }
+
+          final routine = snapshot.data!;
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 📌 Título de la rutina con ícono
+                Row(
+                  children: [
+                    Icon(Icons.fitness_center,
+                        color: Colors.deepPurpleAccent, size: 28),
+                    SizedBox(width: 10),
+                    Text(
+                      routine.nombRout,
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+
+                // 📌 Sección de ejercicios
+                Expanded(
+                  child: routine.ejercR.isNotEmpty
+                      ? ListView.builder(
+                          itemCount: routine.ejercR.length,
+                          itemBuilder: (context, index) {
+                            final exercise = routine.ejercR[index];
+                            return Card(
+                              elevation: 3,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              margin: EdgeInsets.symmetric(vertical: 8.0),
+                              child: ListTile(
+                                leading: Icon(Icons.sports_gymnastics,
+                                    color: Colors.deepPurpleAccent),
+                                title: Text(
+                                  exercise.nombre,
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                subtitle: Text(
+                                    "Reps: ${routine.repet[index]} | Sets: ${exercise.serie}"),
+                                trailing: Icon(Icons.arrow_forward_ios,
+                                    size: 18, color: Colors.grey),
+                              ),
+                            );
+                          },
+                        )
+                      : Center(
+                          child: Text(
+                            "No exercises found",
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
                           ),
-                        );
-                      },
-                    );
-                  }
-                },
-              ),
+                        ),
+                ),
+
+                SizedBox(height: 20),
+
+                // 📌 Botón para comenzar el entrenamiento
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        'ejertraining',
+                        arguments: routine,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurpleAccent,
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: Text(
+                      'Start Workout',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(
-                  context,
-                  'ejerRoutPage',
-                  arguments: widget.datosRutina,
-                );
-              },
-              child: Text('Start Workout'),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 15),
-                textStyle: TextStyle(fontSize: 18),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

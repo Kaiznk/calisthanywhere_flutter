@@ -20,9 +20,11 @@ class Routine {
   );
 
   factory Routine.fromMap(Map<String, dynamic> data) {
-    List<Exercise> exercises = (data['ejercR'] as List)
-        .map((e) => Exercise.fromMap(e as Map<String, dynamic>))
-        .toList();
+    print("Raw ejercR data: ${data['ejercR']}");
+    List<Exercise> exercises = (data['ejercR'] as List<dynamic>?)
+            ?.map((e) => Exercise.fromMap(e as Map<String, dynamic>))
+            .toList() ??
+        [];
 
     List<int> repetitions = (data['repet'] as List?)?.cast<int>() ?? [];
 
@@ -31,21 +33,18 @@ class Routine {
       repetitions = List<int>.filled(exercises.length, 1);
     }
 
-    // Intentar castear `id` a `int`, si falla, asignar 1
-    int id;
-    try {
-      id = int.parse(data['id'].toString());
-    } catch (e) {
-      id = 1; // Valor por defecto si la conversión falla
-    }
+    // Manejar el caso en el que `id` sea null
+    int id = (data['id'] is double)
+        ? (data['id'] as double).toInt()
+        : (data['id'] as int?) ?? 1; // 👈 Evita el error
 
     return Routine(
       id,
-      data['nombreRout'] ?? '',
-      data['serieMax'] ?? 1,
-      data['serieMin'] ?? 1,
-      data['descanEjerc'] ?? 60,
-      data['descanSerie'] ?? 90,
+      data['nombRout'] ?? '',
+      (data['serieMax'] as num?)?.toInt() ?? 4, // 👈 Evita error si es null
+      (data['serieMin'] as num?)?.toInt() ?? 2, // 👈 Evita error si es null
+      (data['descanEjerc'] as num?)?.toInt() ?? 60, // 👈 Evita error si es null
+      (data['descanSerie'] as num?)?.toInt() ?? 90, // 👈 Evita error si es null
       exercises,
       repetitions,
       data['foto'] ?? '',

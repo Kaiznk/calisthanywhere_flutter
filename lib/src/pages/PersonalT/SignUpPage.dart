@@ -41,22 +41,14 @@ class _SignUpPageState extends State<SignUpPage> {
           );
 
           if (loggedInUser != null) {
-            String? userId = loggedInUser.getUserId();
+            String userId = loggedInUser.getUserId()!;
 
-            if (userId != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdditionalInfoPage(userId: userId),
-                ),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content:
-                        Text("Error: No se pudo obtener el ID del usuario.")),
-              );
-            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdditionalInfoPage(userId: userId),
+              ),
+            );
           }
         }
       } catch (e) {

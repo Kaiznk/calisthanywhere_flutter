@@ -1,0 +1,6 @@
+{
+    "appId": "com.application.kaiznkinc.calistenico",
+    "appName": "CalisthAnyWhere",
+    "webDir": "www",
+    "bundledWebRuntime": false
+  }

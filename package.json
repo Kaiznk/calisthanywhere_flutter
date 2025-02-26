@@ -24,5 +24,9 @@
   "bugs": {
     "url": "https://github.com/Kaiznk/calisthanywhere_flutter/issues"
   },
-  "homepage": "https://github.com/Kaiznk/calisthanywhere_flutter#readme"
+  "homepage": "https://github.com/Kaiznk/calisthanywhere_flutter#readme",
+  "dependencies": {
+    "@capacitor/cli": "^7.0.1",
+    "@capacitor/core": "^7.0.1"
+  }
 }

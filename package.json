@@ -1,0 +1,28 @@
+{
+  "name": "calistenico",
+  "version": "1.0.0",
+  "description": "A fitness app to change your life.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kaiznk/calisthanywhere_flutter.git"
+  },
+  "keywords": [
+    "fitness",
+    "calisthenic",
+    "gym"
+  ],
+  "author": "Yanniel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kaiznk/calisthanywhere_flutter/issues"
+  },
+  "homepage": "https://github.com/Kaiznk/calisthanywhere_flutter#readme"
+}
